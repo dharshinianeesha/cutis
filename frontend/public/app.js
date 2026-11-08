@@ -460,6 +460,44 @@ async function refreshWeather() {
   }
 }
 
+
+async function getPlaceName(coords) {
+  const params = new URLSearchParams({
+    lat: coords.latitude,
+    lon: coords.longitude,
+    format: 'json'
+  });
+
+  const response = await fetch(
+    'https://nominatim.openstreetmap.org/reverse?' + params,
+    { signal: AbortSignal.timeout(10000) }
+  );
+
+  if (!response.ok) {
+    throw new Error('Location lookup failed.');
+  }
+
+  const data = await response.json();
+  const address = data.address || {};
+
+  const city =
+    address.city ||
+    address.town ||
+    address.village ||
+    address.suburb ||
+    address.county;
+
+  return [
+    city,
+    address.state,
+    address.country
+  ].filter(Boolean).join(', ') || 'Current location';
+}
+
+
+
+
+
 async function lookupWeather(label, getCoordinates, {saveNow = false, cityId} = {}) {
   if (locationBusy) return;
   locationBusy = true;
@@ -471,16 +509,17 @@ async function lookupWeather(label, getCoordinates, {saveNow = false, cityId} = 
   showStatus(status, 'Checking local weather...');
   try {
     const coords = await getCoordinates();
+    const placeName = await getPlaceName(coords);
     const reading = await fetchWeather(coords, cityId);
     if (saveNow) {
-      await commitLiveWeather({ location:label, ...reading }, coords);
+      await commitLiveWeather({ location:placeName, ...reading }, coords);
       fillLocationForm();
       showStatus(status, '');
     } else {
-      pendingWeather = { label, coords, ...reading };
-      element('location-label').value = label;
+      pendingWeather = { label: placeName, coords, ...reading };
+      element('location-label').value = placeName;
       element('location-weather').value = reading.weather;
-      renderWeatherDetails(reading.weatherReading, label, true);
+      renderWeatherDetails(reading.weatherReading, placeName, true);
       showStatus(status, label + ' · ' + Math.round(reading.weatherReading.temperature) + '°C · ' +
         Math.round(reading.weatherReading.humidity) + '% humidity. Save to update your routine.');
     }
