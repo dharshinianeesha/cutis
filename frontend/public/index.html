@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#202b39">
+  <title>Cutis | Your skin journal</title>
+  <script>
+    try {
+      const savedTheme = localStorage.getItem('cutis_theme');
+      document.documentElement.dataset.theme = savedTheme === 'dark' || (!savedTheme && matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    } catch {}
+  </script>
+  <link rel="preload" href="fonts/bricolage-grotesque-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="config.js"></script>
+  <script defer src="skin-analysis.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <svg class="symbol-bank" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="icon-leaf" viewBox="0 0 24 24"><path d="M20 4c0 10-4 15-11 15-3 0-5-2-5-5C4 7 11 4 20 4ZM4 20c3-5 7-8 12-11"/></symbol>
+    <symbol id="icon-home" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.2"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.2"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.2"/></symbol>
+    <symbol id="icon-scan" viewBox="0 0 24 24"><path d="M8 4H4v4m12-4h4v4M4 16v4h4m12-4v4h-4M9 10h.1m5.9 0h.1M9 15c1.5 1.5 4.5 1.5 6 0"/></symbol>
+    <symbol id="icon-product" viewBox="0 0 24 24"><path d="M8 9V5h8v4m-7 0h6a3 3 0 0 1 3 3v7a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2v-7a3 3 0 0 1 3-3Zm2 6h2"/></symbol>
+    <symbol id="icon-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="3.5"/><path d="M4.5 21v-2a7.5 7.5 0 0 1 15 0v2"/></symbol>
+    <symbol id="icon-drop" viewBox="0 0 24 24"><path d="M12 3C9 7 5 11 5 15a7 7 0 0 0 14 0c0-4-4-8-7-12Z"/></symbol>
+    <symbol id="icon-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></symbol>
+    <symbol id="icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M5 19l2-2M17 7l2-2"/></symbol>
+    <symbol id="icon-arrow" viewBox="0 0 24 24"><path d="M4 12h15m-6-6 6 6-6 6"/></symbol>
+    <symbol id="icon-exit" viewBox="0 0 24 24"><path d="M11 4H5v16h6m-1-8h10m-4-4 4 4-4 4"/></symbol>
+    <symbol id="icon-location" viewBox="0 0 24 24"><path d="M19 10c0 5-7 11-7 11S5 15 5 10a7 7 0 1 1 14 0Z"/><circle cx="12" cy="10" r="2.3"/></symbol>
+    <symbol id="icon-moon" viewBox="0 0 24 24"><path d="M20 15a8.5 8.5 0 0 1-11-11A8.5 8.5 0 1 0 20 15Z"/></symbol>
+    <symbol id="icon-chevron" viewBox="0 0 24 24"><path d="m7 10 5 5 5-5"/></symbol>
+  </svg>
+
+  <main id="login-screen" class="login">
+    <section class="login-story">
+      <div class="brand"><span class="brand-icon"><svg><use href="#icon-leaf"/></svg></span> Cutis</div>
+      <div class="login-heading">
+        <span class="eyebrow">Your skin journal</span>
+        <h1>Skincare that fits your skin.</h1>
+        <p>Get product matches when your saved skin type and a face scan both support them.</p>
+      </div>
+      <div class="login-features">
+        <span>01 <b>Describe your skin</b></span>
+        <span>02 <b>Capture a face scan</b></span>
+        <span>03 <b>Get product suggestions</b></span>
+      </div>
+    </section>
+    <section class="login-panel">
+      <div class="login-card">
+        <div class="login-badge"><svg><use href="#icon-leaf"/></svg></div>
+        <div class="auth-switch" aria-label="Account access">
+          <button type="button" data-auth="login" aria-pressed="true">Sign in</button>
+          <button type="button" data-auth="register" aria-pressed="false">Create account</button>
+        </div>
+        <h2 id="auth-title">Welcome back</h2>
+        <p id="login-description">Sign in to your Cutis account.</p>
+        <form id="account-form" class="auth-form" hidden>
+          <label id="auth-name-row" hidden>Full name <input id="auth-name" name="name" autocomplete="name" maxlength="100"></label>
+          <label>Email <input id="auth-email" name="email" type="email" autocomplete="username" maxlength="254" required></label>
+          <label>Password <input id="auth-password" name="password" type="password" autocomplete="current-password" required></label>
+          <button id="auth-submit" type="submit" class="button primary">Sign in</button>
+        </form>
+        <form id="verification-form" class="auth-form" hidden>
+          <label>Verification code <input id="auth-code" name="code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required></label>
+          <button id="verify-submit" type="submit" class="button primary">Verify email</button>
+          <button id="verify-back" type="button" class="button secondary">Back</button>
+        </form>
+        <p class="status" id="auth-status" role="status"></p>
+        <div id="google-btn-slot"></div>
+        <p class="status" id="google-status" role="status">Loading sign-in&hellip;</p>
+        <button class="button secondary" id="google-retry" type="button" hidden>Try again</button>
+        <p class="fine-print">Face photos stay in your browser. Cutis saves your profile, scan estimates and reminders to your account.</p>
+      </div>
+    </section>
+  </main>
+
+  <div id="app-shell" class="app-shell" hidden>
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-icon"><svg><use href="#icon-leaf"/></svg></span> Cutis</div>
+      <nav aria-label="Main navigation">
+        <button type="button" data-nav="dashboard" aria-current="page"><svg><use href="#icon-home"/></svg><span>Dashboard</span></button>
+        <button type="button" data-nav="scan"><svg><use href="#icon-scan"/></svg><span>Face scan</span></button>
+        <button type="button" data-nav="products"><svg><use href="#icon-product"/></svg><span>Products</span></button>
+        <button type="button" data-nav="location"><svg><use href="#icon-location"/></svg><span>Location</span></button>
+        <button type="button" data-nav="profile"><svg><use href="#icon-user"/></svg><span>Profile</span></button>
+      </nav>
+      <div class="account">
+        <span id="account-avatar" class="avatar"></span>
+        <span id="account-name" class="account-name"></span>
+        <button id="logout" class="icon-button" type="button" aria-label="Sign out" title="Sign out"><svg><use href="#icon-exit"/></svg></button>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div><span class="eyebrow">Skin journal</span><p id="today"></p></div>
+        <div class="topbar-tools">
+          <button type="button" id="live-location" class="button secondary compact location-trigger" title="Use my live location"><svg aria-hidden="true"><use href="#icon-location"/></svg><span>Use my live location</span></button>
+          <button type="button" id="weather-summary" class="button secondary compact weather-summary" data-go="location"><svg aria-hidden="true"><use href="#icon-sun"/></svg><span id="weather-summary-text">Set location</span><span id="weather-summary-values" hidden></span><svg aria-hidden="true"><use href="#icon-chevron"/></svg></button>
+          <button type="button" id="theme-toggle" class="button secondary compact theme-toggle" aria-label="Switch to dark mode" title="Switch to dark mode"><svg aria-hidden="true"><use href="#icon-moon"/></svg></button>
+        </div>
+      </header>
+      <p id="live-weather-status" class="status weather-status" role="status"></p>
+
+      <section id="screen-dashboard" class="screen">
+        <div class="hero">
+          <div><span class="eyebrow">Overview</span><h1 id="greeting">Your dashboard</h1><p>Tell us how your skin feels, then see the products that fit your routine.</p></div>
+          <button type="button" class="button light" data-go="scan">Open face scan <svg><use href="#icon-arrow"/></svg></button>
+        </div>
+        <div class="dashboard-grid">
+          <section class="card">
+            <span class="badge"><svg><use href="#icon-user"/></svg> Skin profile</span>
+            <h2>How would you describe your skin?</h2>
+            <p>Choose the skin type you experience. Your saved selection and a face scan are both required for product matches.</p>
+            <form id="dashboard-form" class="quick-form">
+              <label>Skin type <select id="dashboard-skin" required></select></label>
+              <label>Weather <select id="dashboard-weather" required></select></label>
+              <div class="form-actions">
+                <button type="submit" class="button primary" id="dashboard-save">Save and analyze <svg><use href="#icon-arrow"/></svg></button>
+                <button type="button" class="button secondary" data-go="location">Set location</button>
+              </div>
+            </form>
+            <p class="status" id="dashboard-status" role="status"></p>
+            <p class="fine-print" id="dashboard-location"></p>
+          </section>
+          <section class="card hydration">
+            <span class="badge"><svg><use href="#icon-drop"/></svg> Hydration</span>
+            <div class="metric-heading"><h2>Water intake</h2><span id="hydra-count">0 / 8</span></div>
+            <div id="hydra-glasses" class="glasses" aria-label="Glasses of water"></div>
+            <p id="hydra-status" class="status" role="status">Tap a glass to update your log.</p>
+            <div class="separator"></div>
+            <div class="metric-heading"><h3>Latest skin hydration estimate</h3><strong id="latest-hydration">&mdash;</strong></div>
+            <p id="latest-scan-detail">Take a face scan to add a photo-based estimate.</p>
+          </section>
+          <section class="card">
+            <span class="badge"><svg><use href="#icon-product"/></svg> Product match</span>
+            <h2 id="dashboard-routine-title">Your skincare routine</h2>
+            <p id="dashboard-routine-text" aria-live="polite">Save your skin profile to start your analysis.</p>
+            <button type="button" class="button secondary" data-go="products">View products <svg><use href="#icon-arrow"/></svg></button>
+          </section>
+          <section class="card">
+            <span class="badge"><svg><use href="#icon-clock"/></svg> Reminders</span>
+            <h2>Morning and evening</h2>
+            <p id="dashboard-reminders">Set times that fit your day.</p>
+            <button type="button" class="button secondary" data-go="profile" data-focus="reminders">Manage reminders</button>
+          </section>
+        </div>
+      </section>
+
+      <section id="screen-scan" class="screen" hidden>
+        <div class="section-heading"><span class="eyebrow">Camera check</span><h1>Face scan</h1><p>Capture one face in even light. Cutis adds the photo estimates to your saved skin profile and shows your product matches below.</p></div>
+        <div class="scan-grid">
+          <section class="card camera-card">
+            <div class="camera-frame">
+              <video id="cam-video" autoplay muted playsinline hidden></video>
+              <div id="guide-overlay" class="face-guide" aria-hidden="true" hidden></div>
+              <div id="camera-placeholder">
+                <div class="scan-symbol"><svg><use href="#icon-scan"/></svg></div>
+                <strong>Camera preview</strong>
+                <p>Your photo stays on this device.</p>
+                <button type="button" class="button light" id="camera-start">Enable camera</button>
+              </div>
+            </div>
+            <div class="scan-controls" id="scan-controls" hidden>
+              <button type="button" class="button primary" id="camera-capture">Capture and analyze</button>
+              <button type="button" class="button secondary" id="camera-stop">Stop camera</button>
+            </div>
+            <p class="status" id="camera-status" role="status"></p>
+          </section>
+          <section class="card">
+            <span class="badge"><svg><use href="#icon-sun"/></svg> Before you scan</span>
+            <h2>Use even light</h2>
+            <ul class="checklist"><li>Face a window or soft light.</li><li>Keep one face inside the guide.</li><li>Hold still and keep hair away from your face.</li></ul>
+            <p class="fine-print">Lighting affects these estimates. Tell us about acne, spots or other concerns in your profile.</p>
+          </section>
+        </div>
+        <section class="card result-card" id="analysis-result" hidden>
+          <span class="badge">Photo estimates</span><h2>Scan results</h2>
+          <div id="scan-metrics" class="metrics"></div>
+          <p id="scan-save-status" class="status" role="status"></p>
+          <p class="fine-print">Hydration, shine and redness are approximate image readings for general wellness.</p>
+        </section>
+        <div id="scan-products" class="result-card" aria-live="polite"></div>
+      </section>
+
+      <section id="screen-products" class="screen" hidden>
+        <div class="section-heading"><span class="eyebrow">Your routine</span><h1>Product recommendations</h1><p>Each match uses your selected skin type and a signal from your saved face scan. Weather adjusts how you use the matched products.</p></div>
+        <div id="product-content" aria-live="polite"></div>
+      </section>
+
+      <section id="screen-location" class="screen" hidden>
+        <div class="section-heading"><span class="eyebrow">Local conditions</span><h1>Location and weather</h1><p>Find your city or use your current location to tailor your product routine to the weather.</p></div>
+        <div class="dashboard-grid">
+          <section class="card">
+            <span class="badge"><svg><use href="#icon-location"/></svg> Find a place</span>
+            <h2>Choose your location</h2>
+            <form id="location-search-form" class="auth-form">
+              <label>City or town <input id="location-search" type="search" placeholder="e.g. Visakhapatnam" minlength="2" maxlength="120" required></label>
+              <div class="form-actions">
+                <button type="submit" class="button primary" id="search-location">Search cities</button>
+                <button type="button" class="button secondary" id="use-local-weather">Use current location</button>
+              </div>
+            </form>
+            <div id="location-results" class="location-results"></div>
+            <p id="location-status" class="status" role="status"></p>
+            <p class="fine-print">Weather and city lookup by <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a>. Cutis saves your location label and latest conditions. Device coordinates are used for weather lookup during this session.</p>
+          </section>
+          <form id="location-form" class="card">
+            <span class="badge"><svg><use href="#icon-sun"/></svg> Profile setting</span>
+            <h2>Location and weather</h2>
+            <p id="saved-weather-detail" class="fine-print"></p>
+            <dl id="weather-metrics" class="metrics weather-metrics" hidden>
+              <div><dt>Temperature</dt><dd id="weather-temperature"></dd></div>
+              <div><dt>Air moisture</dt><dd id="weather-humidity"></dd></div>
+              <div><dt>Sky condition</dt><dd id="weather-condition"></dd></div>
+            </dl>
+            <div class="auth-form">
+              <label>Location label <input id="location-label" type="text" maxlength="120" placeholder="Enter your city or choose a result"></label>
+              <label>Weather <select id="location-weather" required></select></label>
+            </div>
+            <button type="submit" class="button primary" id="location-save">Save location and weather</button>
+            <p id="location-save-status" class="status" role="status"></p>
+          </form>
+        </div>
+      </section>
+
+      <section id="screen-profile" class="screen" hidden>
+        <div class="section-heading"><span class="eyebrow">Personal settings</span><h1>Your skin profile</h1><p>Describe what you notice about your skin. Choose every concern that applies.</p></div>
+        <div class="profile-grid">
+          <form id="profile-form" class="card">
+            <h2>About you</h2>
+            <div class="form-grid">
+              <label>Name <input id="profile-name" type="text" required maxlength="100" autocomplete="name"></label>
+              <label>Age <input id="profile-age" type="number" min="13" max="120" step="1" required inputmode="numeric"></label>
+              <label>Gender <span class="optional">(optional)</span><select id="profile-gender"></select></label>
+              <label>Skin type <select id="profile-skin" required></select></label>
+              <label>Weather <select id="profile-weather" required></select></label>
+              <label>Location <span class="optional">(optional)</span><input id="profile-location" type="text" maxlength="120" placeholder="City or town"></label>
+              <label class="checkbox-row"><input id="profile-shaves" type="checkbox"> Facial shaving is part of my routine</label>
+            </div>
+            <p class="fine-print">Age adjusts the guidance. Gender is self-reported. Choose the shaving option for relevant care tips.</p>
+            <fieldset>
+              <legend>Skin concerns</legend>
+              <div id="profile-concerns" class="concern-list"></div>
+            </fieldset>
+            <button type="submit" class="button primary" id="profile-save">Save profile and analyze <svg><use href="#icon-arrow"/></svg></button>
+            <p class="status" id="profile-status" role="status"></p>
+          </form>
+          <div class="profile-aside">
+            <section class="card">
+              <span class="badge"><svg><use href="#icon-user"/></svg> Saved account</span>
+              <h2>Profile summary</h2>
+              <dl id="profile-summary"></dl>
+              <p id="profile-routine-text"></p>
+              <button type="button" class="button secondary" data-go="products">View product matches</button>
+              <h3>Latest saved scan</h3>
+              <div id="profile-scan"></div>
+            </section>
+            <form class="card" id="reminders">
+              <span class="badge"><svg><use href="#icon-clock"/></svg> Daily schedule</span>
+              <h2>Routine reminders</h2>
+              <p>Use your device&rsquo;s local time. Reminders appear in Cutis while the page is visible.</p>
+              <div class="form-grid">
+                <label>Morning <input id="reminder-morning" type="time"></label>
+                <label>Evening <input id="reminder-evening" type="time"></label>
+              </div>
+              <p class="fine-print">Leave a time blank to turn that slot off.</p>
+              <button type="submit" class="button secondary" id="reminder-save">Save reminders</button>
+              <p class="status" id="reminder-status" role="status"></p>
+            </form>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <div id="toast-stack" class="toast-stack" aria-live="polite"></div>
+</body>
+</html>
